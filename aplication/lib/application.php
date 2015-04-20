@@ -11,29 +11,34 @@ class Application {
 
 
     public function run(){
-        session_start();
         // http auth
         if ($this->_auth()) {
-            // if e-mail isset in session show upload file form
-            if (isset($_SESSION[self::EMAIL_KEY])) {
-                // show upload file form
-                $this->_showUploadFileForm();
-            } else {
-                // if e-mail is not set in session show e-mail form
+            if (
+                isset($_POST['email']) && $this->_validateEmail($_POST['email']) &&
+                isset($_FILES['upload']['error']) && $_FILES['upload']['error'] == UPLOAD_ERR_OK &&
+                isset($_FILES['upload']['tmp_name']) && is_file($_FILES['upload']['tmp_name'])
+            ) {
+               //call move upload file, generate file name
 
-                // if form was submitted check email
-                if (count($_POST)) {
-                    // validate email
-                    if ($this->_validateEmail($_POST['email'])) {
-                        $_SESSION[self::EMAIL_KEY] = $_POST['email'];
-                    }
-                } else {
-                    var_dump($_SESSION);
-                    // show email form
-                    $this->_showEmailForm();
-                }
+               //add new entry in data base -> file name, email, status
+
+               //call processor
+
+            // if e-mail isset and validate show upload file form
+            } else if (isset($_POST['email']) && $this->_validateEmail($_POST['email'])) {
+                // show upload file form
+                $this->_showUploadFileForm(array('email' => $_POST['email']));
+            } else {
+                // show email form
+                $this->_showEmailForm();
             }
         }
+    }
+
+    public function getBasePath(){
+        $basePath = realpath(dirname(__FILE__) . '../../');
+
+        return $basePath;
     }
 
     /**
@@ -60,16 +65,12 @@ class Application {
         return false;
     }
 
-    private function _showEmailForm() {
-        //require '';
-        require 'emailForm.php';
-        //require '';
+    private function _showEmailForm(){
+        $this->_renderView('/views/emailForm.php');
     }
 
-    private function _showUploadFileForm() {
-        //require '';
-        require 'uploadFileForm.php';
-        //require '';
+    private function _showUploadFileForm($vars){
+        $this->_renderView('/views/uploadFileForm.php', $vars);
     }
 
     private function _validateEmail($e){
@@ -77,7 +78,19 @@ class Application {
             return true;
         }
         else {
-            return flase;
+            return false;
         }
     }
+
+    private function _renderView($view, $vars = array()){
+        foreach ($vars as $key => $value) {
+            $$key = $value;
+        }
+
+        require $this->getBasePath() . '/views/header.php';
+        require $this->getBasePath() . $view;
+        require $this->getBasePath() . '/views/footer.php';
+    }
+
+
 }
