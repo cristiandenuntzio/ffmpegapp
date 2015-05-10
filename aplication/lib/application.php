@@ -6,6 +6,9 @@
 /**
  * This class handles the client request
  */
+
+//use Db;
+
 class Application {
     const EMAIL_KEY = 'email';
 
@@ -16,14 +19,56 @@ class Application {
             if (
                 isset($_POST['email']) && $this->_validateEmail($_POST['email']) &&
                 isset($_FILES['upload']['error']) && $_FILES['upload']['error'] == UPLOAD_ERR_OK &&
-                isset($_FILES['upload']['tmp_name']) && is_file($_FILES['upload']['tmp_name'])
+                isset($_FILES['upload']['tmp_name']) && file_exists($_FILES['upload']['tmp_name'])
             ) {
+                require $this->getBasePath() . '/lib/Db.php';
                //call move upload file, generate file name
+                $db = new Db($this);
+                $resourseArray = $db->readRecords();
+
+                require $this->getBasePath() . '/lib/Processor.php';
+
+                $fileName = $_FILES['upload']['name'];
+
+                //check for duplicate in $resourceArray
+                $check = true;
+                $toAdd = 1;
+                $tempFileName = $fileName;
+                while ($check) {
+                    $check = false;
+                    foreach ($resourseArray as $row) {
+                        if ($row['fileName'] == $tempFileName){
+// TODO: move preg match out of loops
+                            if (preg_match('/^(.+)\.([^\.]+)$/', $fileName, $pieces)) {
+                                $tempFileName = $pieces[1] . $toAdd . '.' . $pieces[2];
+                            } else {
+                                $tempFileName .= $toAdd;
+                            }
+                            $check = true;
+                            $toAdd++;
+                        }
+                    }
+                }
+
+                $fileName = $tempFileName;
+
+                //move temporary file
+// TODO:make files folder configurable
+                move_uploaded_file($_FILES['upload']['tmp_name'], $this->getBasePath() . '/files/' . $fileName);
+
+                //add data to db
+                $resourseArray[] = array(
+                    'fileName' => $fileName,
+                    'email' => $_POST['email'],
+                    'status' => Processor::STATUS_PENDING,
+                );
 
                //add new entry in data base -> file name, email, status
-
+                $db->writeRecords($resourseArray);
                //call processor
 
+               //show succes message
+               $this->_renderSuccesMessage();
             // if e-mail isset and validate show upload file form
             } else if (isset($_POST['email']) && $this->_validateEmail($_POST['email'])) {
                 // show upload file form
@@ -86,10 +131,13 @@ class Application {
         foreach ($vars as $key => $value) {
             $$key = $value;
         }
-
         require $this->getBasePath() . '/views/header.php';
         require $this->getBasePath() . $view;
         require $this->getBasePath() . '/views/footer.php';
+    }
+
+    private function _renderSuccesMessage() {
+        $this->_renderView('/views/succesMessage.php');
     }
 
 
