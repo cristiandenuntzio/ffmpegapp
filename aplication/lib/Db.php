@@ -6,7 +6,7 @@ class Db {
 
     private $_dbFilePath = '';
 
-    public function __construct($application){
+    public function __construct($application) {
         global $SETTINGS;
 
         $this->_dbFilePath = $application->getBasePath() . '/' . $SETTINGS['dbFilePath'];

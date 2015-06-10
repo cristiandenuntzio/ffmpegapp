@@ -67,6 +67,8 @@ class Application {
                 $db->writeRecords($resourseArray);
                //call processor
 
+// call $messenger->notify()
+
                //show succes message
                $this->_renderSuccesMessage();
             // if e-mail isset and validate show upload file form
