@@ -6,10 +6,10 @@ class Db {
 
     private $_dbFilePath = '';
 
-    public function __construct($application) {
+    public function __construct($basePath) {
         global $SETTINGS;
 
-        $this->_dbFilePath = $application->getBasePath() . '/' . $SETTINGS['dbFilePath'];
+        $this->_dbFilePath = $basePath . '/' . $SETTINGS['dbFilePath'];
     }
 
     //this function reads csv file
@@ -26,6 +26,7 @@ class Db {
                     'fileName' => $line[0],
                     'email' => $line[1],
                     'status' => $line[2],
+                    'outputFileName' => $line[3],
                     );
             }
             fclose($handle);

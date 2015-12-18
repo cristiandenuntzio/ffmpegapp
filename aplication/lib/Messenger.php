@@ -21,7 +21,7 @@ class Messenger
         socket_set_block($socket) or die("Unable to set block on socket");
 
         // connect - blocking
-        $connect = socket_connect($socket, $SETTINGS['hostAddress'], $$SETTINGS['hostPort']);
+        $connect = socket_connect($socket, $SETTINGS['hostAddress'], $SETTINGS['hostPort']);
 
         if (!$connect) {
             $errorNo = socket_last_error();
@@ -71,7 +71,6 @@ class Messenger
 
         // start main loop
         while (TRUE) {
-            echo "enter loop\n";
             // accept socket - blocking
             $acceptedSocket = socket_accept($socket);
 
